@@ -1,9 +1,10 @@
 {
-  "name": "node_packaged",
+  "name": "switcher_server",
   "productName": "Switcher Server",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
+  "repository": "jezza23/TCPToWebSocketServer",
   "scripts": {
     "start": "electron main.js",
     "build": "electron-packager . --overwrite --platform=darwin --arch=x64 --prune=true --out=release-builds --icon=img/AppIcon.icns"
