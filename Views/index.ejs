@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Switcher Control</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/jquery.js"></script>
+</head>
+<body>
+    <div class="header">
+        Switcher Control <div id="status-bubble" class="orange-bubble"></div>
+        <br>IP: <%= store.get("switch_ip") %>:<%= store.get("switch_port")%>
+        <div class="right">
+            Connected Clients: <span class="connect_clients">-1</span><br>
+            Connect IP: <%= ip %>:1289
+        </div> 
+        <div class="center">
+            <center>
+                <button onclick="$('.console_output').html('')">Clear Log</button>
+                <button onclick="openOptions()">Options</button>
+            </center>
+        </div>
+    </div>
+    <div class="console">
+        <ul class="console_output">
+        </ul>
+    </div>
+    <style>
+        body {
+            margin:0;   
+            padding:0;
+            font-family: sans-serif;
+        }
+        .center {
+            position: fixed;
+            top:8px;
+            left:45%;
+        }
+        .console {
+            padding: 10px;
+        }
+
+        .console_output li {
+            border-bottom: 1px solid whitesmoke;
+            padding-bottom:7px;
+            padding-top:7px;
+        }
+        .left {
+            float:left
+        }
+        .right {
+            float:right;
+            position: fixed;
+            right: 10px;
+            top: 10px;
+        }
+        .header {
+            background: whitesmoke;
+            padding:10px;
+        }
+    </style>
+   
+   <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+    <script src="/jquery.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/ping.min.js"></script>
+    <script>if (window.module) module = window.module;</script>
+    <script>
+        function ping(ip, callback) {
+            if (!this.inUse) {
+                this.status = 'unchecked';
+                this.inUse = true;
+                this.callback = callback;
+                this.ip = ip;
+                var _that = this;
+                this.img = new Image();
+                this.img.onload = function () {
+                    _that.inUse = false;
+                    _that.callback('responded');
+
+                };
+                this.img.onerror = function (e) {
+                    if (_that.inUse) {
+                        _that.inUse = false;
+                        _that.callback('error', e);
+                    }
+
+                };
+                this.start = new Date().getTime();
+                this.img.src = "http://" + ip;
+                this.timer = setTimeout(function () {
+                    if (_that.inUse) {
+                        _that.inUse = false;
+                        _that.callback('timeout');
+                    }
+                }, 1500);
+            }
+        }
+    </script>
+    <script>
+        
+        var ip = "<%= store.get('switch_ip') %>"
+        var port = "<%= store.get('switch_port') %>"
+        var shouldBlink = true
+        var socket = io()
+        function openOptions() {
+            console.log("Opening Options...")
+            socket.emit("open options", "")
+        }
+
+        function reload() {
+
+            $("#status-bubble").removeClass("green-bubble")
+            $("#status-bubble").removeClass("grey-bubble")
+
+            statusBlink()
+            shouldBlink = true
+            socket.on("client update", function(num) {
+                $(".connect_clients").html(num)
+            })
+            
+            socket.on("reload", (r_ip) => {
+                ip = r_ip
+                window.location.reload()
+            })
+
+            
+
+            
+
+            socket.on("command", function(data) {
+                $(".console_output").append("<li>Command Received: " + data + "</li>")
+            })
+
+            console.log("ws://<%= store.get('switch_ip') %>:<%= store.get('switch_port') %>")
+
+            let ws = new WebSocket("ws://<%= store.get('switch_ip') %>:<%= store.get('switch_port') %>")
+            ws.onopen = () => {
+                    shouldBlink = false
+                    $("#status-bubble").removeClass("orange-bubble")
+                    $("#status-bubble").removeClass("grey-bubble")
+                    $("#status-bubble").addClass("green-bubble")
+                    shouldBlink = false
+                    ws.close()
+            }
+
+            ws.onerror = (e) => {
+                shouldBlink = false
+                $("#status-bubble").removeClass("orange-bubble")
+                $("#status-bubble").removeClass("grey-bubble")
+                $("#status-bubble").addClass("grey-bubble")
+                alert("Timeout / Error, the ip for the console may be incorrect")
+                console.log("Timeout / Error, the ip for the console may be incorrect")
+                shouldBlink = false
+                ws.close()
+            }
+        }
+        function statusBlink() {
+                    $("#status-bubble").toggleClass("orange-bubble")
+                    $("#status-bubble").toggleClass("grey-bubble")
+                setTimeout(() => {
+                    if(shouldBlink) {
+                        statusBlink()
+                    }
+                }, 500);
+            } 
+    $(function() {
+
+        reload()
+    })
+    </script>
+    <style>
+    .console_output {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .grey-bubble {
+        width:10px;
+        height:10px;
+        background-color: grey;
+        border-radius: 50%;
+        position:fixed;
+        top:13px;
+        left:135px;
+    }
+    .orange-bubble {
+        width:10px;
+        height:10px;
+        background-color: orange;
+        border-radius: 50%;
+        position:fixed;
+        top:13px;
+        left:135px;
+    }
+    .green-bubble {
+        width:10px;
+        height:10px;
+        background-color: greenyellow;
+        border-radius: 50%;
+        position:fixed;
+        top:13px;
+        left:135px;
+    }
+    </style>
+</body>
+</html>
