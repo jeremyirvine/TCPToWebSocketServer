@@ -8,7 +8,7 @@ Open the server, click options, set the ip address, then save and close the opti
 ## Compilation
 Requires Node.js and NPM installed on the system for compilation
 ```
-git clone https://github.com/jezza23/TCPToWebSocketServer
+git clone https://github.com/jeremyirvine/TCPToWebSocketServer
 cd TCPToWebSocketServer/
 npm run-script build
 ```
